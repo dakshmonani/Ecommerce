@@ -88,15 +88,20 @@ public class CartServiceImpl implements CartService {
         }
         List<CartDTO> dtos = carts.stream().map(cart -> {
             CartDTO cartDTO = modelMapper.map(cart,CartDTO.class);
-            List<ProductDto> products = cart.getCartItems().stream().map(p->modelMapper.map(p.getProduct(),ProductDto.class)).toList();
-            cartDTO.setProductDtos(products);
+            List<ProductDto> productDtoList = cart.getCartItems().stream().map(cartItem -> {
+                ProductDto productDto = modelMapper.map(cartItem.getProduct(),ProductDto.class);
+                productDto.setQuantity(cartItem.getQuantity());
+                System.out.println("quantity in cart" + cartItem.getQuantity());
+                return productDto;
+            }).toList();
+            cartDTO.setProductDtos(productDtoList);
             return cartDTO;
         }).toList();
         return dtos;
     }
 
     @Override
-    public CartDTO getCart(String emailId, Long cartId) {
+        public CartDTO getCart(String emailId, Long cartId) {
        Cart cart = cartRepository.findCartByEmailAndCartId(emailId,cartId);
        if (cart == null){
            throw  new ResourceNotFoundException("Cart","cartId",cartId);
@@ -104,6 +109,8 @@ public class CartServiceImpl implements CartService {
        CartDTO cartDTO = modelMapper.map(cart,CartDTO.class);
        cart.getCartItems().forEach(c->c.getProduct().setQuantity(c.getQuantity()));
        List<ProductDto> productDtoList = cart.getCartItems().stream().map(p->modelMapper.map(p.getProduct(),ProductDto.class)).toList();
+
+
        cartDTO.setProductDtos(productDtoList);
        return cartDTO;
     }
